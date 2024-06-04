@@ -3,66 +3,62 @@ package jm.task.core.jdbc.dao;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
+
+    private Connection connection = Util.getConnection();
+
     public UserDaoJDBCImpl() {
 
     }
 
-
+    @Override
     public void createUsersTable() {
-        try {
-            Statement statement = Util.getConnection().createStatement();
+        try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS users (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), lastName VARCHAR(255), age TINYINT);");
-            statement.close();
-            Util.closeConnection();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
+    @Override
     public void dropUsersTable() {
-        try {
-            Statement statement = Util.getConnection().createStatement();
+        try (Statement statement = connection.createStatement()) {
             statement.execute("DROP TABLE IF EXISTS users;");
-            statement.close();
-            Util.closeConnection();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
+    @Override
     public void saveUser(String name, String lastName, byte age) {
-        try {
-            Statement statement = Util.getConnection().createStatement();
-            statement.execute("INSERT INTO users (name, lastName, age) VALUES ('" + name + "', '" + lastName + "', " + age + ");");
-            statement.close();
-            Util.closeConnection();
+        String sql = "INSERT INTO users (name, lastName, age) VALUES (?, ?, ?);";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, name);
+            statement.setString(2, lastName);
+            statement.setInt(3, age);
+            statement.execute();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
     }
 
+    @Override
     public void removeUserById(long id) {
-        try {
-            Statement statement = Util.getConnection().createStatement();
-            statement.execute("DELETE FROM users WHERE id = " + id + ";");
-            statement.close();
-            Util.closeConnection();
+        String sql = "DELETE FROM users WHERE id = ?;";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, id);
+            statement.execute();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
+    @Override
     public List<User> getAllUsers() {
-        try {
-            Statement statement = Util.getConnection().createStatement();
+        try (Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery("SELECT * FROM users;");
             List<User> userList = new java.util.ArrayList<>();
             while (resultSet.next()) {
@@ -73,23 +69,18 @@ public class UserDaoJDBCImpl implements UserDao {
                 user.setAge(resultSet.getByte("age"));
                 userList.add(user);
             }
-            statement.close();
-            Util.closeConnection();
             return userList;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
+    @Override
     public void cleanUsersTable() {
-        try {
-            Statement statement = Util.getConnection().createStatement();
-            statement.execute("DELETE FROM users;");
-            statement.close();
-            Util.closeConnection();
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("TRUNCATE TABLE users;");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
     }
 }

@@ -6,6 +6,10 @@ import java.sql.SQLException;
 
 public class Util {
 
+    private Util() {
+        throw new IllegalStateException("Utility class");
+    }
+
     static Connection connection;
     private static final String URL = "jdbc:mysql://localhost:3306/mydb";
     private static final String USER = "root";
@@ -25,7 +29,9 @@ public class Util {
 
     public static void closeConnection() {
         try {
-            connection.close();
+            if (connection != null) {
+                connection.close();
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
