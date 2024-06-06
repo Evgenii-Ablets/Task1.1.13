@@ -7,6 +7,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
@@ -25,9 +26,7 @@ public class UserDaoHibernateImpl implements UserDao {
             session.createNativeQuery("CREATE TABLE IF NOT EXISTS users (id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), lastName VARCHAR(255), age TINYINT);").executeUpdate();
             transaction.commit();
         } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
+            System.out.println(e.getMessage());
         }
     }
 
@@ -38,9 +37,7 @@ public class UserDaoHibernateImpl implements UserDao {
             session.createNativeQuery("DROP TABLE IF EXISTS users;").executeUpdate();
             transaction.commit();
         } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
+            System.out.println(e.getMessage());
         }
     }
 
@@ -61,7 +58,9 @@ public class UserDaoHibernateImpl implements UserDao {
     public void removeUserById(long id) {
         try (Session session = sessionFactory.getCurrentSession()) {
             transaction = session.beginTransaction();
-            session.delete(session.get(User.class, id));
+            if (session.get(User.class, id) != null) {
+                session.delete(session.get(User.class, id));
+            }
             transaction.commit();
         } catch (Exception e) {
             if (transaction != null) {
@@ -74,15 +73,14 @@ public class UserDaoHibernateImpl implements UserDao {
     public List<User> getAllUsers() {
         try (Session session = sessionFactory.getCurrentSession()) {
             transaction = session.beginTransaction();
+            transaction.commit();
             List<User> users = session.createCriteria(User.class).list();
             transaction.commit();
             return users;
         } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
+            e.getMessage();
         }
-        return null;
+        throw new RuntimeException();
     }
 
     @Override
