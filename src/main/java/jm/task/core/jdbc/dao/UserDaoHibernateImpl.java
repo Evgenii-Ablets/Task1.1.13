@@ -7,7 +7,9 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import javax.transaction.Transactional;
+import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
@@ -58,8 +60,9 @@ public class UserDaoHibernateImpl implements UserDao {
     public void removeUserById(long id) {
         try (Session session = sessionFactory.getCurrentSession()) {
             transaction = session.beginTransaction();
-            if (session.get(User.class, id) != null) {
-                session.delete(session.get(User.class, id));
+            User user = session.get(User.class, id);
+            if ((user) != null) {
+                session.delete(user);
             }
             transaction.commit();
         } catch (Exception e) {
@@ -73,13 +76,13 @@ public class UserDaoHibernateImpl implements UserDao {
     public List<User> getAllUsers() {
         try (Session session = sessionFactory.getCurrentSession()) {
             transaction = session.beginTransaction();
-            List<User> users = session.createCriteria(User.class).list();
+            List<User> users = session.createQuery("SELECT x from User x", User.class).list();
             transaction.commit();
             return users;
         } catch (Exception e) {
             e.getMessage();
         }
-        throw new RuntimeException();
+        return Collections.emptyList();
     }
 
     @Override
